@@ -8,8 +8,9 @@ DROP TABLE IF EXISTS `messages`;
 
 CREATE TABLE `messages` (
   `id` INTEGER NULL AUTO_INCREMENT DEFAULT NULL,
-  `text` varchar(255),
-  `user` varchar(255),
+  `message` varchar(255),
+  `username` varchar(255),
+  `roomname` varchar(255),
   `createdAt` varchar(255),
   PRIMARY KEY (`id`)
 );
