@@ -25,7 +25,8 @@ var insertData = function(data, callback) {
 var selectData = function(ascending, limit, callback) {
   var order =' ';
   if(!ascending){order = ' DESC '}
-  dbConnection.query('SELECT * FROM messages ORDER BY createdAt'+order+'LIMIT '+limit, data, callback)
+  var queryString = 'SELECT * FROM messages ORDER BY createdAt'+order+'LIMIT '+limit;
+  dbConnection.query(queryString, callback);
 };
 
 module.exports.insertData = insertData;

@@ -2,7 +2,7 @@
 app = {
 
     // server: 'https://api.parse.com/1/classes/chatterbox',
-    server: 'http://127.0.0.1:3000/classes/chatterbox',
+    server: 'http://127.0.0.1:3000/classes/messages',
 
     init: function() {
       console.log('running chatterbox');
@@ -37,17 +37,17 @@ app = {
 
     renderMessage: function(message){
       var $user = $("<div>", {class: 'user'}).text(message.username);
-      var $text = $("<div>", {class: 'text'}).text(message.text);
-      var $message = $("<div>", {class: 'chat', 'data-id': message.objectId }).append($user, $text);
+      var $text = $("<div>", {class: 'text'}).text(message.message);
+      var $message = $("<div>", {class: 'chat', 'data-id': message.id }).append($user, $text);
       return $message;
     },
 
     displayMessage: function(message){
       if( app.blockedUsers.indexOf(message.username) < 0 ){
-        if( !app.onscreenMessages[message.objectId] ){
+        if( !app.onscreenMessages[message.id] ){
           var $html = app.renderMessage(message);
           $('#chats').prepend($html);
-          app.onscreenMessages[message.objectId] = true;
+          app.onscreenMessages[message.id] = true;
         }
       }
     },
@@ -80,7 +80,7 @@ app = {
         data: JSON.stringify(message),
         contentType: 'application/json',
         success: function(json){
-          message.objectId = json.objectId;
+          message.id = json.id;
           app.displayMessage(message);
         },
         complete: function(){
