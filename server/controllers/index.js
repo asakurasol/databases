@@ -7,18 +7,18 @@ module.exports = {
   // route /messages
   messages: {
     get: function (req, res) {
-      models.messages.get(false, 20, function(err, data) {
-        if (err) {
-          console.log(err);
-        }
+      models.messages.get(false, 20, function(data) {
+        // if (err) {
+        //   console.log(err);
+        // }
         var results = {'results':data};
         res.json(results);
       });
     }, // a function which handles a get request for all messages
     post: function (req, res) {
       console.log(req.body);
-      models.messages.post(req.body, function(err, data) {
-        console.log(err);
+      models.messages.post(req.body, function(data) {
+        //console.log(err);
         console.log(data);
         res.redirect(301, '../index.html');
       })
