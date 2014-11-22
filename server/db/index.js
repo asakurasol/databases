@@ -10,7 +10,7 @@ var mysql = require('mysql');
   // `createdAt` varchar(255),
   // PRIMARY KEY (`id`)
 
-dbConnection = mysql.createConnection({
+var dbConnection = mysql.createConnection({
   user: "root",
   password: "",
   database: "chat"
@@ -22,9 +22,23 @@ var insertData = function(data, callback) {
   dbConnection.query('INSERT INTO messages SET ?', data, callback)
 };
 
+var selectData = function(ascending, limit, callback) {
+  var order =' ';
+  if(!ascending){order = ' DESC '}
+  dbConnection.query('SELECT * FROM messages ORDER BY createdAt'+order+'LIMIT '+limit, data, callback)
+};
+
+module.exports.insertData = insertData;
+module.exports.selectData = selectData;
+/*
 var data = {message: "bye", username: "I", roomname: "Heaven"};
 
 insertData(data, function(err, result){
   console.log(err);
   console.log(result);
-})
+
+  selectData(true, 2, function(err, result){
+    console.log(err);
+    console.log(result);
+  })
+});*/

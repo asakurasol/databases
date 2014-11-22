@@ -11,7 +11,7 @@ CREATE TABLE `messages` (
   `message` varchar(255),
   `username` varchar(255),
   `roomname` varchar(255),
-  `createdAt` varchar(255),
+  `createdAt` DATETIME DEFAULT NOW(),
   PRIMARY KEY (`id`)
 );
 

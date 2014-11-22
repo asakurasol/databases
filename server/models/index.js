@@ -1,7 +1,8 @@
 var db = require('../db');
 
 
-
+// module.exports.insertData = insertData;
+// module.exports.selectData = selectData;
 
 module.exports = {
   messages: {
