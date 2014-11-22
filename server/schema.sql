@@ -17,9 +17,6 @@ CREATE TABLE `messages` (
 
 /* Create other tables and define schemas for them here! */
 
-INSERT INTO `messages` (text, user, createdAt)
-VALUES ('hello', 'I', 'now');
-
 
 /*  Execute this file from the command line by typing:
  *    mysql -u root < schema.sql
