@@ -9,7 +9,9 @@ module.exports = {
     get: function (ascending, limit, callback) {
       db.selectData(ascending, limit, callback);
     }, // a function which produces all the messages
-    post: function () {} // a function which can be used to insert a message into the database
+    post: function (data, callback) {
+      db.insertData(data, callback);
+    } // a function which can be used to insert a message into the database
   },
 
   users: {

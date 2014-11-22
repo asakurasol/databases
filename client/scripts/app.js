@@ -17,7 +17,7 @@ app = {
 
 
       app.loadMsgs();
-      setInterval( app.loadMsgs.bind(app), 1000);
+      setInterval( app.loadMsgs.bind(app), 10000);
 
       $('#send').on('submit', app.handleSubmit);
     },
@@ -27,7 +27,7 @@ app = {
 
       var message = {
         username: app.username,
-        text: app.$text.val()
+        message: app.$text.val()
       };
 
       app.$text.val('');

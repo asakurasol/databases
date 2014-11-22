@@ -16,7 +16,14 @@ module.exports = {
         res.json(results);
       });
     }, // a function which handles a get request for all messages
-    post: function (req, res) {} // a function which handles posting a message to the database
+    post: function (req, res) {
+      console.log(req.body);
+      models.messages.post(req.body, function(err, data) {
+        console.log(err);
+        console.log(data);
+        res.redirect(301, '../index.html');
+      })
+    } // a function which handles posting a message to the database
   },
   // route /users
   users: {
