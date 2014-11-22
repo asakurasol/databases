@@ -1,101 +1,292 @@
-// YOUR CODE HERE:
-app = {
-
-    // server: 'https://api.parse.com/1/classes/chatterbox',
-    server: 'http://127.0.0.1:3000/classes/messages',
-
-    init: function() {
-      console.log('running chatterbox');
-      // Get username
-      app.username = window.location.search.substr(10);
-
-      app.onscreenMessages = {};
-      app.blockedUsers = ['BRETTSPENCER', 'Chuck Norris'];
-
-      // cache some dom references
-      app.$text = $('#message');
+// [TODO]: switch room(/join), befriend, sync
+// room list(/list)
+// $(document).ready(function(){
+// =============== MODEL ==================
+var Message = Backbone.Model.extend({
+  idAttribute: "id",
+  initialize: function() {
+    var that = this;
+    var mt = moment(that.get('createdAt')).format('HH:mm MM/DD/YYYY')
+    //that.set('createdAt', mt);
 
 
-      app.loadMsgs();
-      setInterval( app.loadMsgs.bind(app), 10000);
+    // this.set('username', this.escape('username'));
+    // this.set('text', this.escape('text'));
+  },
+  defaults: {
+    'username': 'Ghost',
+    'message': '',
+    'roomname': 'lobby',
+  },
+  url: function() {
+    return ChatSettings.APIURL;
+  }
+});
 
-      $('#send').on('submit', app.handleSubmit);
-    },
+var User = Backbone.Model.extend({
+  initialize: function() {},
+  defaults: {
+    'username': 'Ghost'
+  }
+});
 
-    handleSubmit: function(e){
-      e.preventDefault();
+// var message = {
+//   'username': 'shawndrost',
+//   'text': 'trololo',
+//   'roomname': '4chan'
+// };
 
-      var message = {
-        username: app.username,
-        message: app.$text.val()
-      };
+// =============== COLLECTION(Room) ==================
+var Room = Backbone.Collection.extend({
 
-      app.$text.val('');
+  model: Message,
+  url: function() {
+    return ChatSettings.APIURL;
+  },
+  initialize: function(models, options) {
+    this.roomname = options.roomname;
+  },
+  parse: function(response) {
+    return response.results;
+  }
+});
 
-      app.sendMsg(message);
-    },
+var UserFilters = Backbone.Collection.extend({
+  model: User
+})
 
-    renderMessage: function(message){
-      var $user = $("<div>", {class: 'user'}).text(message.username);
-      var $text = $("<div>", {class: 'text'}).text(message.message);
-      var $message = $("<div>", {class: 'chat', 'data-id': message.id }).append($user, $text);
-      return $message;
-    },
+// =============== VIEW ==================
+var MessageView = Backbone.View.extend({
+  tag: 'div',
+  className: 'messageView ui small floating message',
+  initialize: function() {},
+  render: function() {
+    var template = _.template($('#messageViewTemplate').html());
+    this.$el.html(template(this.model.attributes));
 
-    displayMessage: function(message){
-      if( app.blockedUsers.indexOf(message.username) < 0 ){
-        if( !app.onscreenMessages[message.id] ){
-          var $html = app.renderMessage(message);
-          $('#chats').prepend($html);
-          app.onscreenMessages[message.id] = true;
-        }
-      }
-    },
+    var $username = this.$el.find('.username');
+    var usernameText = $username.text();
+    console.log(this.checkFriend(usernameText));
 
-    displayMessages: function(messages){
-      for( var i = 0; i < messages.length; i++ ){
-        app.displayMessage(messages[i]);
-      }
-    },
-
-    loadMsgs: function(){
-      $.ajax({
-        url: app.server,
-        data: { order: '-createdAt' },
-        contentType: 'application/json',
-        success: function(json){
-          app.displayMessages(json.results);
-        },
-        complete: function(){
-          app.stopSpinner();
-        }
-      });
-    },
-
-    sendMsg: function(message){
-      app.startSpinner();
-      $.ajax({
-        type: 'POST',
-        url: app.server,
-        data: JSON.stringify(message),
-        contentType: 'application/json',
-        success: function(json){
-          message.id = json.id;
-          app.displayMessage(message);
-        },
-        complete: function(){
-          app.stopSpinner();
-        }
-      });
-    },
-
-    startSpinner: function(){
-      $('.spinner img').show();
-      $('form input[type=submit]').attr('disabled', "true");
-    },
-
-    stopSpinner: function(){
-      $('.spinner img').fadeOut('fast');
-      $('form input[type=submit]').attr('disabled', null);
+    if ( this.checkFriend(usernameText) ) {
+      $username.addClass('friendName');
     }
+
+    // add filter click to username text
+    this.$el.find('.username').click(function() {
+      uF1.add([{
+        username: usernameText
+      }]);
+
+      rv.$el.empty();
+    });
+
+
+    return this;
+  },
+  checkFriend: function(name) {
+    return _(uF1.models).chain().map(function(now){
+      return now.get('username')
+    }).contains(name).value()
+  }
+});
+
+var UserLabelView = Backbone.View.extend({
+  tag: 'div',
+  className: "ui label",
+  initialize: function() {
+
+  },
+  render: function() {
+    var template = _.template($('#userFilterTemplate').html());
+    this.$el.html(template(this.model.attributes));
+    this.$el.find('i').click(this.removeCallBack.bind(this));
+    return this;
+  },
+  removeCallBack: function() {
+    this.$el.html('');
+    this.model.destroy();
+    rv.$el.empty();
+  }
+})
+
+var UserFiltersView = Backbone.View.extend({
+  tag: 'div',
+  initialize: function() {
+    this.listenTo(this.collection, 'add', this.render);
+    this.listenTo(this.collection, 'remove', this.render);
+  },
+  render: function() {
+    var that = this;
+    this._userFilters = [];
+    this.collection.each(function(filter) {
+      that._userFilters.push(new UserLabelView({
+        model: filter
+      }))
+    });
+    $(this.el).empty();
+    _(this._userFilters).each(function(user) {
+      $(that.el).append(user.render().el);
+    })
+  }
+});
+
+
+
+var RoomView = Backbone.View.extend({
+  tag: 'div',
+  className: 'messageContainer',
+  initialize: function() {
+    this.collection.on('sync', this.render, this);
+  },
+  render: function() {
+    /*
+    var that = this;
+    this._messageViews = [];
+    this.collection.each(function(msg) {
+      that._messageViews.push(new MessageView({
+        model: msg
+      }));
+    });
+
+    $(this.el).empty(); // reset view
+
+    _(this._messageViews).each(function(mv) { // mv: message view
+      $(that.el).append(mv.render().el);
+    });
+    */
+    // console.log(this.collection);
+
+
+    d3.select(this.el).selectAll('div')
+      .data(this.collection.models, function(d) {
+        return d ? d.id : 'whatever';
+      })
+      .enter()
+      .sort(function(a, b) {
+        if (b.get('createdAt') > a.get('createdAt')) return 1;
+        else return -1;
+      })
+      .insert(function(d) {
+        var mv = new MessageView({
+          model: d
+        });
+        return mv.render().el;
+      }, ":first-child")
+      .order();
+
+  }
+
+});
+
+// =============== Posting/Commands ==================
+
+var switchRoom = function(room_name) {
+  if (typeof roomViews[room_name] === 'undefined') {
+
+    roomViews[room_name] = new RoomView({
+      collection: new Room([], {
+        roomname: room_name
+      })
+    });
+
+  }
+
+  rv = roomViews[room_name];
+  ChatSettings.roomname = room_name;
+  $('#roomname').text(ChatSettings.roomname);
+
+
+  $('#main-msg').empty();
+  $('#main-msg').append(rv.el);
+}
+
+var sendMsg = function() {
+  var text = $("#msgToSend").val();
+  // check for commands
+  // /join
+  var join = /^\/join\s([a-zA-Z0-9]+)/.exec(text);
+  if (join !== null) {
+    switchRoom(join[1]);
+  } else {
+    // send message
+    var msg = new Message();
+    msg.set('username', ChatSettings.username);
+
+    msg.set('message', text);
+    msg.set('roomname', ChatSettings.roomname)
+    msg.save();
+  }
+
+  $("#msgToSend").val('');
 };
+
+$("#sendMsgBtn").click(sendMsg);
+$("#msgToSend").keydown(function(e) {
+  if (e.keyCode == 13) {
+    sendMsg();
+  }
+});
+
+var bye = function(id) {
+  $.ajax({
+    // always use this url
+    url: 'https://api.parse.com/1/classes/chatterbox/' + id,
+    type: 'DELETE',
+    contentType: 'application/json',
+    success: function(data) {
+      console.log('data received:', data);
+    },
+    error: function(data) {
+      // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+      console.error('chatterbox: Failed to send message');
+    }
+  });
+};
+// });
+
+var saver = function() {
+  var list;
+  $.ajax({
+    // always use this url
+    url: 'https://api.parse.com/1/classes/chatterbox',
+    type: 'GET',
+    data: {
+      where: {
+        username: 'BRETTSPENCER'
+      },
+      order: '-createdAt',
+      limit: 5
+    },
+    contentType: 'application/json',
+    success: function(data) {
+      console.log('chatterbox: Message sent');
+      list = data;
+      list.results.forEach(function(p) {
+        $.ajax({
+          // always use this url
+          url: 'https://api.parse.com/1/classes/chatterbox/' +
+            p.objectId,
+          type: 'DELETE',
+          contentType: 'application/json',
+          success: function(data) {
+            console.log('chatterbox: Message sent', data);
+          },
+          error: function(data) {
+            // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+            console.error(
+              'chatterbox: Failed to send message');
+          }
+        });
+
+
+
+      })
+    },
+    error: function(data) {
+      // see: https://developer.mozilla.org/en-US/docs/Web/API/console.error
+      console.error('chatterbox: Failed to send message');
+    }
+  });
+
+}
