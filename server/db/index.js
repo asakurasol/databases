@@ -44,24 +44,26 @@ var Message = sequelize.define('MessageTable', {
 
 });
 
-//User.hasMany(Message, {as: 'Texts'});;;
+User.hasMany(Message);
 Message.belongsTo(User);
 
 User.sync().success(function() {});
 Message.sync().success(function() {});
 
 var insertData = function(data, callback) {
-  var newMessage = Message.build(data);
-  var user = User.build({username:'bobert'});
-  user.save().success( function() {
-    newMessage.save().success(function() {
-      newMessage.setUser(user);
+  console.log(data);
+  User.findOrCreate({where: {username: data.username}}).success( function(user) {
+      var newMessage = Message.build(data);
+      newMessage.save().success(function() {
+        newMessage.setUser(user[0].dataValues.id);
+      });
     });
-  });
 };
 
 var selectData = function(where, order, callback) {
-  Message.findAll().success(function(data) {
+  Message.findAll({include: {User:username}}).complete(function(err, data) {
+    console.log(err);
+    console.log(data);
     callback(data);
   });
 };
