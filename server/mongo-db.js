@@ -29,7 +29,6 @@ exports.selectData = function(ascending, limit, callback) {
   client.open(function(err, p_client) {
     // Create a collection, if it doesn't exist already:
     var collection = client.collection('messages');
-    console.log(collection);
     collection.find({}, function(err, cursor) {
       console.log(err);
       cursor.toArray(callback);
