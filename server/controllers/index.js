@@ -12,6 +12,7 @@ module.exports = {
         //   console.log(err);
         // }
         var results = {'results':data};
+        console.log(results);
         res.json(results);
       });
     }, // a function which handles a get request for all messages

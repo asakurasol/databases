@@ -61,7 +61,7 @@ var insertData = function(data, callback) {
 };
 
 var selectData = function(where, order, callback) {
-  Message.findAll({include: {User:username}}).complete(function(err, data) {
+  Message.findAll({include: [User]}).complete(function(err, data) {
     console.log(err);
     console.log(data);
     callback(data);
